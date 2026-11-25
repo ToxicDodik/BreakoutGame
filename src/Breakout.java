@@ -34,9 +34,6 @@ public class Breakout extends GraphicsProgram {
 	/** Number of bricks per row */
 	private static final int NBRICKS_PER_ROW = 10;
 
-	/** Number of rows of bricks */
-	private static final int NBRICK_ROWS = 10;
-
 	/** Separation between bricks */
 	private static final int BRICK_SEP = 4;
 
@@ -55,6 +52,9 @@ public class Breakout extends GraphicsProgram {
 
 	/** Animation cycle delay */
 	private static final int DELAY = 10;
+
+    /** Initial lives count */
+    private static final int INITIAL_LIVES_COUNT = 3;
 	
 	/** Random number generator for setting initial ball velocity */
 	private RandomGenerator rgen = RandomGenerator.getInstance();
@@ -67,6 +67,12 @@ public class Breakout extends GraphicsProgram {
 	
 	/** Ball velocity */
 	private double vx, vy;
+
+    /** Remaining lives count */
+    private int remainingLives;
+
+    /** Скільки цеглин залишилось на полі */
+    private int bricksLeft;
 
 	/** Registers the mouse listeners during game initialization. */
 	public void init() {
@@ -115,6 +121,9 @@ public class Breakout extends GraphicsProgram {
 	
 	/** Creates the rows of bricks. */
 	private void createBricks() {
+        bricksLeft = currentLevel.getRows() * NBRICKS_PER_ROW;
+        //bricksLeft = 1;
+
 		for (int row = 0; row < currentLevel.getRows(); row++) {
 			int y = BRICK_Y_OFFSET + row * (BRICK_HEIGHT + BRICK_SEP);
 			Color rowColor = Palette.brickColor(row);
@@ -153,11 +162,11 @@ public class Breakout extends GraphicsProgram {
 	/**
 	 * Runs the main game loop.
 	 *
-	 * @return true, якщо рівень виграно. TODO  життя і перемога ще не дописані,
-	 *         поки цикл без кінця, тому return тут ще немає
+	 * @return true, якщо рівень виграно, false якщо програно
+	 *
 	 */
 	private boolean runGame() {
-		while (true) {
+        while (remainingLives > 0 && bricksLeft > 0) {
 			double startX = (WIDTH - ball.getWidth()) / 2.0;
 			double startY = (HEIGHT - ball.getHeight()) / 2.0;
 			ball.setLocation(startX, startY);
@@ -168,12 +177,20 @@ public class Breakout extends GraphicsProgram {
 			}
 			vy = currentLevel.getBallSpeed();
 
-			while (ball.getY() < HEIGHT) {
+			while (ball.getY() < HEIGHT && bricksLeft > 0) {
 				moveBall();
 				moveBonus();
 				pause(DELAY);
 			}
+
+            if (bricksLeft > 0) {
+                remainingLives--;
+                sounds.playDamage();
+                hud.setLives(remainingLives);
+            }
 		}
+
+        return bricksLeft == 0;
 	}
 	
 	/** Moves the ball one step and handles collisions. */
@@ -231,6 +248,7 @@ public class Breakout extends GraphicsProgram {
 		}
 
 		remove(brick);
+        bricksLeft--;
 		sounds.playBounce();
 		brickBroken(brick);
 	}
@@ -491,6 +509,7 @@ public class Breakout extends GraphicsProgram {
     private void startLevel(Level level) {
         currentLevel = level;
         bonus = null;
+        remainingLives = INITIAL_LIVES_COUNT;
         hud = new Hud(level.getNumber(), getWidth());
         add(hud);
     }
@@ -595,8 +614,11 @@ public class Breakout extends GraphicsProgram {
             case FAST_BALL:
                 changeBallSpeed(FAST_FACTOR);
                 break;
+            case EXTRA_LIFE:
+                remainingLives++;
+                hud.setLives(remainingLives);
+                break;
             default:
-                // EXTRA_LIFE: TODO тут буде +1 життя
                 break;
         }
         sounds.playBonus(type.isGood());

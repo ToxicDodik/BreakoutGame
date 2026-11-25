@@ -17,6 +17,7 @@ public class Sounds {
     private AudioClip bonusBad;
     private AudioClip win;
     private AudioClip lose;
+    private AudioClip damage;
 
     /** Фонова мелодія */
     private AudioClip music;
@@ -31,6 +32,7 @@ public class Sounds {
         bonusBad = MediaTools.loadAudioClip("bonus_bad.wav");
         win = MediaTools.loadAudioClip("win.wav");
         lose = MediaTools.loadAudioClip("lose.wav");
+        damage = MediaTools.loadAudioClip("damage.wav");
         music = MediaTools.loadAudioClip("music.wav");
     }
 
@@ -52,6 +54,11 @@ public class Sounds {
     /** Зупиняє фонову мелодію */
     public void stopMusic() {
         music.stop();
+    }
+
+    /** Звук урона */
+    public void playDamage() {
+        damage.play();
     }
 
     /**
